@@ -1,0 +1,28 @@
+{
+  "name": "@joachimhb/bath-control",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@joachimhb/eslint-config-jhb": "git+https://github.com/joachimhb/eslint-config-jhb.git#0.1.0",
+    "assertthat": "^3.1.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "check-types": "^8.0.3",
+    "cookie-parser": "^1.4.3",
+    "eventemitter2": "5.0.1",
+    "express": "^4.16.4",
+    "lodash": "^4.17.14",
+    "log4js": "^4.5.1",
+    "ms": "^2.1.2",
+    "pigpio-dht": "^1.1.1",
+    "roboter": "^6.1.0",
+    "rpio": "^1.0.13"
+  }
+}
