@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
   bath: {
     light: {
@@ -9,6 +11,12 @@ module.exports = {
     fan: {
       power: 12,
       speed: 13
+    }
+  },
+  wc: {
+    fan: {
+      power: 15,
+      speed: 16
     }
   }
   // wc: {

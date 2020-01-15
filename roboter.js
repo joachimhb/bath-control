@@ -1,3 +1,5 @@
+'use strict';
+
 const roboter = require('roboter');
 
 roboter
