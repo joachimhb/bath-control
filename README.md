@@ -46,28 +46,14 @@ make
 sudo make install
 ```
 
-## configuration
+### docker
 
-### pins
+#### dns
 
-```js
-module.exports = {
-  bath: {
-    light: {
-      pin: 11
-    },
-    dht22: {
-      gpio: 4
-    },
-    fan: {
-      power: {
-        pin: 12,
-      },
-      speed: {
-        pin: 13
-      }
-    }
-  },
-  ...
+/etc/docker/daemon.json
+
+```json
+{
+    "dns": ["10.0.0.2", "8.8.8.8"]
 }
 ```
