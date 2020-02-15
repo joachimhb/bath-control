@@ -5,10 +5,13 @@ const http = require('http');
 const _ = require('lodash');
 const log4js = require('log4js');
 const express = require('express');
-const ms = require('ms');
+const exphbs  = require('express-handlebars');
+const moment = require('moment');
 const bodyParser = require('body-parser');
 
 const Control = require('./lib/Control');
+
+const config = require('../config/bathControl');
 
 const logger = log4js.getLogger();
 
@@ -20,21 +23,15 @@ logger.level = 'debug';
 const bathControl = new Control({
   logger,
   location: 'bath',
-  trailingTime: ms('2m'),
-  lightTimeout: ms('1m'),
-  humidityMinThreshold: 70,
-  humidityMaxThreshold: 80,
-  fanMaxMinutesRunning: 30,
+  pins: config.bath.pins,
+  ...config.bath.settings,
 });
 
 const wcControl = new Control({
   logger,
   location: 'wc',
-  trailingTime: ms('2m'),
-  lightTimeout: ms('1m'),
-  humidityMinThreshold: 70,
-  humidityMaxThreshold: 80,
-  fanMaxMinutesRunning: 30,
+  pins: config.wc.pins,
+  ...config.wc.settings,
 });
 
 // setInterval(() => {
@@ -53,32 +50,106 @@ const app = express();
 
 app.use(bodyParser.json());
 
-app.set('json spaces', 2);
+app.engine('handlebars', exphbs());
+app.set('view engine', 'handlebars');
 
-// eslint-disable-next-line no-unused-vars
-app.get('/status', (req, res, next) => {
-  const bathTemp = _.get(bathControl.status, ['bath', 'temperature'], {});
-  const bathHumidity = _.get(bathControl.status, ['bath', 'humidity'], {});
-  const bathLight = _.get(bathControl.status, ['bath', 'light'], {});
+const started = moment();
 
-  const wcTemp = _.get(wcControl.status, ['wc', 'temperature'], {});
-  const wcHumidity = _.get(wcControl.status, ['wc', 'humidity'], {});
-  const wcLight = _.get(wcControl.status, ['wc', 'light'], {});
+app.get('/', (req, res) => {
+  const bathTemp = _.get(bathControl.status, ['temperature'], {});
+  const bathHumidity = _.get(bathControl.status, ['humidity'], {});
+  const bathLight = _.get(bathControl.status, ['light'], {});
+  const bathFan = _.get(bathControl.status, ['fan'], {});
+  const bathFanControl = _.get(bathControl.status, ['fanControl'], {});
 
-  const human = {
-    Bad: {
-      Temperatur: bathTemp.since ? `${bathTemp.value}C seit ${bathTemp.since.toLocaleTimeString()}` : 'unbekannt',
-      Luftfeuchtigkeit: bathHumidity.since ? `${bathHumidity.value}% seit ${bathHumidity.since.toLocaleTimeString()}` : 'unbekannt',
-      Licht: bathLight.since ? `${bathLight.value === 'on' ? 'an' : 'aus'} seit ${bathLight.since.toLocaleTimeString()}` : 'unbekannt'
+  const wcTemp = _.get(wcControl.status, ['temperature'], {});
+  const wcHumidity = _.get(wcControl.status, ['humidity'], {});
+  const wcLight = _.get(wcControl.status, ['light'], {});
+  const wcFan = _.get(wcControl.status, ['fan'], {});
+  const wcFanControl = _.get(bathControl.status, ['fanControl'], {});
+
+  const momentFormat = 'YYYY-MM-DD HH:mm:ss';
+
+  const status = {
+    main: {
+      started: started.format(momentFormat)
     },
-    WC: {
-      Temperatur: wcTemp.since ? `${wcTemp.value}C seit ${wcTemp.since.toLocaleTimeString()}` : 'unbekannt',
-      Luftfeuchtigkeit: wcHumidity.since ? `${wcHumidity.value}% seit ${wcHumidity.since.toLocaleTimeString()}` : 'unbekannt',
-      Licht: wcLight.since ? `${wcLight.value === 'on' ? 'an' : 'aus'} seit ${wcLight.since.toLocaleTimeString()}` : 'unbekannt'
+    bath: {
+      temperature: {
+        value: bathTemp.value,
+        since: bathTemp.since ? moment(bathTemp.since).format(momentFormat) : 'unbekannt'
+      },
+      humidity: {
+        value: bathHumidity.value,
+        since: bathHumidity.since ? moment(bathHumidity.since).format(momentFormat) : 'unbekannt'
+      },
+      light: {
+        value: bathLight.value,
+        since: bathLight.since ? moment(bathLight.since).format(momentFormat) : 'unbekannt'
+      },
+      fan: {
+        value: bathFan.value,
+        since: bathFan.since ? moment(bathFan.since).format(momentFormat) : 'unbekannt'
+      },
+      control: {
+        value: bathFanControl.value,
+        since: bathFanControl.since ? moment(bathFanControl.since).format(momentFormat) : 'unbekannt',
+        setAutoLink: 'bath/fan/auto',
+        setOffLink: 'bath/fan/off',
+        setMinLink: 'bath/fan/min',
+        setMaxLink: 'bath/fan/max',
+      }
+    },
+    wc: {
+      temperature: {
+        value: wcTemp.value,
+        since: wcTemp.since ? moment(wcTemp.since).format(momentFormat) : 'unbekannt'
+      },
+      humidity: {
+        value: wcHumidity.value,
+        since: wcHumidity.since ? moment(wcHumidity.since).format(momentFormat) : 'unbekannt'
+      },
+      light: {
+        value: wcLight.value,
+        since: wcLight.since ? moment(wcLight.since).format(momentFormat) : 'unbekannt'
+      },
+      fan: {
+        value: wcFan.value,
+        since: wcFan.since ? moment(wcFan.since).format(momentFormat) : 'unbekannt'
+      },
+      control: {
+        value: wcFanControl.value,
+        since: wcFanControl.since ? moment(wcFanControl.since).format(momentFormat) : 'unbekannt',
+        setAutoLink: 'wc/fan/auto',
+        setOffLink: 'wc/fan/off',
+        setMinLink: 'wc/fan/min',
+        setMaxLink: 'wc/fan/max',
+      }
     }
   };
 
-  res.json(human);
+  // console.log(status);
+
+  res.render('status', status);
+});
+
+app.set('json spaces', 2);
+
+// eslint-disable-next-line no-unused-vars
+app.get('/:location/fan/:value', (req, res, next) => {
+  const {location, value} = req.params;
+
+  logger.info(`Fan change: ${location} to ${value}`);
+
+  if(location === 'bath') {
+    bathControl.setFan(value);
+  } else if(location === 'wc') {
+    wcControl.setFan(value);
+  }
+
+  setTimeout(() => {
+    res.redirect('/');
+  }, 250);
 });
 
 // eslint-disable-next-line no-unused-vars

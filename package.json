@@ -16,14 +16,16 @@
   },
   "dependencies": {
     "body-parser": "1.19.0",
-    "check-types": "11.1.1",
+    "check-types": "11.1.2",
     "cookie-parser": "1.4.4",
     "eventemitter2": "5.0.1",
     "express": "4.17.1",
+    "express-handlebars": "^3.1.0",
+    "handlebars": "^4.7.3",
     "lodash": "4.17.15",
     "log4js": "4.5.1",
     "millisecond": "0.1.2",
-    "moment": "2.24.0",
+    "moment": "^2.24.0",
     "ms": "2.1.2",
     "pigpio-dht": "1.1.1",
     "rpio": "1.7.1"
