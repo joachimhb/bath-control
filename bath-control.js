@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('http');
+const fs = require('fs');
 
 const _ = require('lodash');
 const log4js = require('log4js');
@@ -9,14 +10,31 @@ const exphbs  = require('express-handlebars');
 const moment = require('moment');
 const bodyParser = require('body-parser');
 
-const Control = require('./lib/Control');
-
-const config = require('../config/bathControl');
-
 const logger = log4js.getLogger();
 
 logger.level = 'info';
 logger.level = 'debug';
+
+const lockFilePath = '/var/run/pigpio.pid';
+
+try {
+  const stats = fs.statSync(lockFilePath);
+
+  if(stats) {
+    fs.unlinkSync(lockFilePath);
+
+    logger.warn(`Deleted lockfile [${lockFilePath}]`);
+  }
+} catch(err) {
+  if(err.code !== 'ENOENT') {
+    logger.error(`Failed to cleanup lockfile [${lockFilePath}]`, err);
+  }
+}
+
+const Control = require('./lib/Control');
+
+const config = require('../config/bathControl');
+
 
 // logger.info(`Initializing...`);
 
@@ -66,7 +84,7 @@ app.get('/', (req, res) => {
   const wcHumidity = _.get(wcControl.status, ['humidity'], {});
   const wcLight = _.get(wcControl.status, ['light'], {});
   const wcFan = _.get(wcControl.status, ['fan'], {});
-  const wcFanControl = _.get(bathControl.status, ['fanControl'], {});
+  const wcFanControl = _.get(wcControl.status, ['fanControl'], {});
 
   const momentFormat = 'YYYY-MM-DD HH:mm:ss';
 
