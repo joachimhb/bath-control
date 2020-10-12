@@ -22,7 +22,7 @@
     "express": "4.17.1",
     "express-handlebars": "^3.1.0",
     "handlebars": "^4.7.6",
-    "lodash": "4.17.20",
+    "lodash": "4.17.19",
     "log4js": "4.5.1",
     "millisecond": "0.1.2",
     "moment": "^2.24.0",
