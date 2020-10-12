@@ -1,13 +1,13 @@
 'use strict';
 
 const http = require('http');
-const fs = require('fs');
+const fs   = require('fs');
 
-const _ = require('lodash');
-const log4js = require('log4js');
-const express = require('express');
-const exphbs  = require('express-handlebars');
-const moment = require('moment');
+const _          = require('lodash');
+const log4js     = require('log4js');
+const express    = require('express');
+const exphbs     = require('express-handlebars');
+const moment     = require('moment');
 const bodyParser = require('body-parser');
 
 const logger = log4js.getLogger();
@@ -18,16 +18,18 @@ logger.level = 'debug';
 const lockFilePath = '/var/run/pigpio.pid';
 
 try {
+  // eslint-disable-next-line no-sync
   const stats = fs.statSync(lockFilePath);
 
   if(stats) {
+    // eslint-disable-next-line no-sync
     fs.unlinkSync(lockFilePath);
 
     logger.warn(`Deleted lockfile [${lockFilePath}]`);
   }
-} catch(err) {
-  if(err.code !== 'ENOENT') {
-    logger.error(`Failed to cleanup lockfile [${lockFilePath}]`, err);
+} catch(error) {
+  if(error.code !== 'ENOENT') {
+    logger.error(`Failed to cleanup lockfile [${lockFilePath}]`, error);
   }
 }
 
@@ -35,8 +37,7 @@ const Control = require('./lib/Control');
 
 const config = require('../config/bathControl');
 
-
-// logger.info(`Initializing...`);
+logger.info(`Initializing...`);
 
 const bathControl = new Control({
   logger,
@@ -51,10 +52,6 @@ const wcControl = new Control({
   pins: config.wc.pins,
   ...config.wc.settings,
 });
-
-// setInterval(() => {
-//   logger.debug(bathControl.fanControl);
-// }, 1000);
 
 bathControl.init();
 
@@ -175,7 +172,7 @@ app.use((err, req, res, next) => {
   logger.error(err.message);
 });
 
-const port = 3000;
+const {port} = config;
 
 const server = http.createServer(app);
 
