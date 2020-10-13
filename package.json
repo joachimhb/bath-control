@@ -9,25 +9,22 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@joachimhb/eslint-config-jhb": "git+https://github.com/joachimhb/eslint-config-jhb.git#0.1.0",
-    "assertthat": "3.1.0",
-    "execa": "4.0.3",
-    "roboter": "6.1.0"
+    "@joachimhb/eslint-config-jhb": "git+https://github.com/joachimhb/eslint-config-jhb.git#0.1.0"
   },
   "dependencies": {
     "body-parser": "1.19.0",
     "check-types": "11.1.2",
     "cookie-parser": "1.4.5",
-    "eventemitter2": "5.0.1",
+    "eventemitter2": "6.4.3",
     "express": "4.17.1",
-    "express-handlebars": "^3.1.0",
-    "handlebars": "^4.7.6",
+    "express-handlebars": "5.1.0",
+    "handlebars": "4.7.6",
     "lodash": "4.17.20",
-    "log4js": "4.5.1",
+    "log4js": "6.3.0",
     "millisecond": "0.1.2",
-    "moment": "^2.24.0",
+    "moment": "2.29.1",
     "ms": "2.1.2",
     "pigpio-dht": "1.1.1",
-    "rpio": "1.7.1"
+    "rpio": "1.x"
   }
 }

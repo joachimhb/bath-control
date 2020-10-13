@@ -1,90 +1,46 @@
-<div class='main-headline'>Gestarted: {{{main.started}}}</div>
-<div class='location'>
-  <div class='location-header'>Bad:</div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Licht:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data'>{{{bath.light.value}}}</div>
-      <div class='field-set__field__value__since'>seit {{{bath.light.since}}}</div>
-    </div>
-  </div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Temperatur:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data'>{{{bath.temperature.value}}}C</div>
-      <div class='field-set__field__value__since'>seit {{{bath.temperature.since}}}</div>
-    </div>
-  </div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Luftfeuchtigkeit:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data'>{{{bath.humidity.value}}}%</div>
-      <div class='field-set__field__value__since'>seit {{{bath.humidity.since}}}</div>
-    </div>
-  </div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Luefter:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data field-set__field__value__data--{{{bath.fan.value}}}'>{{{bath.fan.value}}}</div>
-      <div class='field-set__field__value__since'>seit {{{bath.fan.since}}}</div>
-    </div>
-  </div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Control:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data field-set__field__value__data--{{{bath.control.value}}}'>{{{bath.control.value}}}</div>
-      <div class='field-set__field__value__since'>seit {{{bath.control.since}}}</div>
-    </div>
-  </div>
-  <div class='change-links'>
-    <a class='change-link change-link--auto' href="{{{bath.control.setAutoLink}}}">auto</a>
-    <a class='change-link change-link--off' href="{{{bath.control.setOffLink}}}">off</a>
-    <a class='change-link change-link--min' href="{{{bath.control.setMinLink}}}">min</a>
-    <a class='change-link change-link--max' href="{{{bath.control.setMaxLink}}}">max</a>
-  </div>
-</div>
+<div class='main-headline'>Started: {{{status.main.started}}}</div>
+{{#each status.locations}}
+  <div class='location'>
+    <div class='location-header'>{{lookup ../labels @key}}:</div>
+    <div class='settings'>
+      <form action='/settings/{{@key}}' method='post' id='settings'>
+        <table>
+          <tr>
+            <td>Nachlaufzeit:</td>
+            <td><input style='width:30px' type="text" name="trailingTime" value={{this.settings.trailingTime}}></td>
+            <td>Luftfeuchtigkeit [min]:</td>
+            <td><input style='width:30px' type="number" name="humidityMinThreshold" value={{this.settings.humidityMinThreshold}}>%</td>
+            <td>Minimale Lüfter Laufzeit:</td>
+            <td><input style='width:30px' type="text" name="minRunTime" value={{this.settings.minRunTime}}></td>
+          </tr>
+          <tr>
+            <td>Licht Laufzeit:</td>
+            <td><input style='width:30px' type="text" name="lightTimeout" value={{this.settings.lightTimeout}}></td>
+            <td>Luftfeuchtigkeit [max]:</td>
+            <td><input style='width:30px' type="number" name="humidityMaxThreshold" value={{this.settings.humidityMaxThreshold}}>%</td>
+          </tr>
+          <tr>
+            <td><button type='submit' form='settings' value='Submit'>update</button></td>
+          </tr>
+        </table>
+      </form>
 
-<div class='location'>
-  <div class='location-header'>WC:</div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Licht:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data'>{{{wc.light.value}}}</div>
-      <div class='field-set__field__value__since'>seit {{{wc.light.since}}}</div>
+    </div>
+
+    {{#each this.values}}
+      <div class='field-set__field'>
+        <div class='field-set__field__label'>{{lookup ../../labels @key}}:</div>
+        <div class='field-set__field__value'>
+          <div class='field-set__field__value__data field-set__field__value__data--{{{this.value}}}'>{{{this.value}}}{{lookup ../../units @key}}</div>
+          <div class='field-set__field__value__since'>seit {{{this.since}}}</div>
+        </div>
+      </div>
+    {{/each}}
+    <div class='change-links'>
+      <a class='change-link change-link--auto' href="{{{this.setAutoLink}}}">auto</a>
+      <a class='change-link change-link--off' href="{{{this.setOffLink}}}">off</a>
+      <a class='change-link change-link--min' href="{{{this.setMinLink}}}">min</a>
+      <a class='change-link change-link--max' href="{{{this.setMaxLink}}}">max</a>
     </div>
   </div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Temperatur:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data'>{{{wc.temperature.value}}}C</div>
-      <div class='field-set__field__value__since'>seit {{{wc.temperature.since}}}</div>
-    </div>
-  </div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Luftfeuchtigkeit:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data'>{{{wc.humidity.value}}}%</div>
-      <div class='field-set__field__value__since'>seit {{{wc.humidity.since}}}</div>
-    </div>
-  </div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Luefter:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data field-set__field__value__data--{{{wc.fan.value}}}'>{{{wc.fan.value}}}</div>
-      <div class='field-set__field__value__since'>seit {{{wc.fan.since}}}</div>
-    </div>
-  </div>
-  <div class='field-set__field'>
-    <div class='field-set__field__label'>Control:</div>
-    <div class='field-set__field__value'>
-      <div class='field-set__field__value__data field-set__field__value__data--{{{wc.control.value}}}'>{{{wc.control.value}}}</div>
-      <div class='field-set__field__value__since'>seit {{{wc.control.since}}}</div>
-    </div>
-  </div>
-  <div class='change-links'>
-    <a class='change-link change-link--auto' href="{{{wc.control.setAutoLink}}}">auto</a>
-    <a class='change-link change-link--off' href="{{{wc.control.setOffLink}}}">off</a>
-    <a class='change-link change-link--min' href="{{{wc.control.setMinLink}}}">min</a>
-    <a class='change-link change-link--max' href="{{{wc.control.setMaxLink}}}">max</a>
-  </div>
-</div>
+{{/each}}

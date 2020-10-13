@@ -37,27 +37,62 @@ const Control = require('./lib/Control');
 
 const config = require('../config/bathControl');
 
+const started = moment();
+
+const defaultSettings = {
+  trailingTime: '3m',
+  lightTimeout: '3m',
+  minRunTime: '1m',
+  humidityMinThreshold: 75,
+  humidityMaxThreshold: 90,
+  fanDefault: 'off',
+};
+
+const valueKeys = [
+  'temperature',
+  'humidity',
+  'light',
+  'fan',
+  'fanControl',
+];
+
+const units = {
+  temperature: '%',
+  humidity: 'C',
+};
+
+const labels = {
+  temperature: 'Temperatur',
+  humidity: 'Luftfeuchtigkeit',
+  light: 'Licht',
+  fan: 'Lüfter',
+  fanControl: 'Control',
+  bath: 'Bad',
+  wc: 'WC',
+};
+
 logger.info(`Initializing...`);
 
-const bathControl = new Control({
-  logger,
-  location: 'bath',
-  pins: config.bath.pins,
-  ...config.bath.settings,
-});
+const locations = {
+  bath: new Control({
+    logger,
+    location: 'bath',
+    pins: config.bath.pins,
+    settings: defaultSettings,
+  }),
+  wc: new Control({
+    logger,
+    location: 'wc',
+    pins: config.wc.pins,
+    settings: defaultSettings,
+  }),
+};
 
-const wcControl = new Control({
-  logger,
-  location: 'wc',
-  pins: config.wc.pins,
-  ...config.wc.settings,
-});
-
-bathControl.init();
+locations.bath.init();
 
 logger.info(`BathControl initialized`);
 
-wcControl.init();
+locations.wc.init();
 
 logger.info(`WcControl initialized`);
 
@@ -65,90 +100,74 @@ const app = express();
 
 app.use(bodyParser.json());
 
+app.use(express.urlencoded({
+  extended: true
+}));
+
 app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');
 
-const started = moment();
-
-app.get('/', (req, res) => {
-  const bathTemp = _.get(bathControl.status, ['temperature'], {});
-  const bathHumidity = _.get(bathControl.status, ['humidity'], {});
-  const bathLight = _.get(bathControl.status, ['light'], {});
-  const bathFan = _.get(bathControl.status, ['fan'], {});
-  const bathFanControl = _.get(bathControl.status, ['fanControl'], {});
-
-  const wcTemp = _.get(wcControl.status, ['temperature'], {});
-  const wcHumidity = _.get(wcControl.status, ['humidity'], {});
-  const wcLight = _.get(wcControl.status, ['light'], {});
-  const wcFan = _.get(wcControl.status, ['fan'], {});
-  const wcFanControl = _.get(wcControl.status, ['fanControl'], {});
-
+const getStatus = function() {
   const momentFormat = 'YYYY-MM-DD HH:mm:ss';
 
   const status = {
     main: {
       started: started.format(momentFormat)
     },
-    bath: {
-      temperature: {
-        value: bathTemp.value,
-        since: bathTemp.since ? moment(bathTemp.since).format(momentFormat) : 'unbekannt'
-      },
-      humidity: {
-        value: bathHumidity.value,
-        since: bathHumidity.since ? moment(bathHumidity.since).format(momentFormat) : 'unbekannt'
-      },
-      light: {
-        value: bathLight.value,
-        since: bathLight.since ? moment(bathLight.since).format(momentFormat) : 'unbekannt'
-      },
-      fan: {
-        value: bathFan.value,
-        since: bathFan.since ? moment(bathFan.since).format(momentFormat) : 'unbekannt'
-      },
-      control: {
-        value: bathFanControl.value,
-        since: bathFanControl.since ? moment(bathFanControl.since).format(momentFormat) : 'unbekannt',
-        setAutoLink: 'bath/fan/auto',
-        setOffLink: 'bath/fan/off',
-        setMinLink: 'bath/fan/min',
-        setMaxLink: 'bath/fan/max',
-      }
-    },
-    wc: {
-      temperature: {
-        value: wcTemp.value,
-        since: wcTemp.since ? moment(wcTemp.since).format(momentFormat) : 'unbekannt'
-      },
-      humidity: {
-        value: wcHumidity.value,
-        since: wcHumidity.since ? moment(wcHumidity.since).format(momentFormat) : 'unbekannt'
-      },
-      light: {
-        value: wcLight.value,
-        since: wcLight.since ? moment(wcLight.since).format(momentFormat) : 'unbekannt'
-      },
-      fan: {
-        value: wcFan.value,
-        since: wcFan.since ? moment(wcFan.since).format(momentFormat) : 'unbekannt'
-      },
-      control: {
-        value: wcFanControl.value,
-        since: wcFanControl.since ? moment(wcFanControl.since).format(momentFormat) : 'unbekannt',
-        setAutoLink: 'wc/fan/auto',
-        setOffLink: 'wc/fan/off',
-        setMinLink: 'wc/fan/min',
-        setMaxLink: 'wc/fan/max',
-      }
-    }
+    locations: {},
   };
 
-  // console.log(status);
+  for(const location of Object.keys(locations)) {
+    for(const valueKey of valueKeys) {
+      status.locations[location] = status.locations[location] || {
+        values: {},
+      };
 
-  res.render('status', status);
+      const valueObj = _.get(locations[location], ['status', valueKey], {});
+
+      status.locations[location].values[valueKey] = {
+        value: valueObj.value,
+        since: valueObj.since ? moment(valueObj.since).format(momentFormat) : 'unbekannt'
+      };
+
+      if(valueKey === 'fanControl') {
+        Object.assign(status.locations[location], {
+          setAutoLink: 'wc/fan/auto',
+          setOffLink: 'wc/fan/off',
+          setMinLink: 'wc/fan/min',
+          setMaxLink: 'wc/fan/max',
+          settings: locations[location].settings,
+        });
+      }
+    }
+  }
+
+  return status;
+};
+
+app.get('/', (req, res) => {
+  const status = getStatus();
+
+  res.render('status', {labels, units, status});
+});
+
+app.get('/raw/status', (req, res) => {
+  const status = getStatus();
+
+  res.json(status);
 });
 
 app.set('json spaces', 2);
+
+app.post('/settings/:location', (req, res) => {
+  const {location} = req.params;
+
+  locations[location].eventbus.emit(`settings::changed`, req.body);
+
+  setTimeout(() => {
+    res.redirect('/');
+  }, 250);
+});
 
 // eslint-disable-next-line no-unused-vars
 app.get('/:location/fan/:value', (req, res, next) => {
@@ -156,11 +175,7 @@ app.get('/:location/fan/:value', (req, res, next) => {
 
   logger.info(`Fan change: ${location} to ${value}`);
 
-  if(location === 'bath') {
-    bathControl.setFan(value);
-  } else if(location === 'wc') {
-    wcControl.setFan(value);
-  }
+  locations[location].setFan(value);
 
   setTimeout(() => {
     res.redirect('/');
