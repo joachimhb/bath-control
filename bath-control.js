@@ -10,6 +10,10 @@ const exphbs     = require('express-handlebars');
 const moment     = require('moment');
 const bodyParser = require('body-parser');
 
+const rpio  = require('rpio');
+
+rpio.init({mapping: 'gpio'});
+
 const logger = log4js.getLogger();
 
 logger.level = 'info';
@@ -88,13 +92,13 @@ const locations = {
   bath: new Control({
     logger,
     location: 'bath',
-    pins: config.bath.pins,
+    gpios: config.bath.gpios,
     settings: defaultSettings,
   }),
   wc: new Control({
     logger,
     location: 'wc',
-    pins: config.wc.pins,
+    gpios: config.wc.gpios,
     settings: defaultSettings,
   }),
 };
