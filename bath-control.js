@@ -35,7 +35,18 @@ try {
 
 const Control = require('./lib/Control');
 
-const config = require('../config/bathControl');
+let config = null;
+
+const dockerConfigPath = '../config/bathControl';
+const localConfigPath = '../smart-home-setup/kammer/config/bathControl';
+
+try {
+  config = require(dockerConfigPath);
+  logger.info(`Using config [${dockerConfigPath}]`);
+} catch(err) {
+  config = require(localConfigPath);
+  logger.info(`Using config [${localConfigPath}]`);
+}
 
 const started = moment();
 
@@ -57,8 +68,8 @@ const valueKeys = [
 ];
 
 const units = {
-  temperature: '%',
-  humidity: 'C',
+  temperature: 'C',
+  humidity: '%',
 };
 
 const labels = {
@@ -129,17 +140,15 @@ const getStatus = function() {
         value: valueObj.value,
         since: valueObj.since ? moment(valueObj.since).format(momentFormat) : 'unbekannt'
       };
-
-      if(valueKey === 'fanControl') {
-        Object.assign(status.locations[location], {
-          setAutoLink: 'wc/fan/auto',
-          setOffLink: 'wc/fan/off',
-          setMinLink: 'wc/fan/min',
-          setMaxLink: 'wc/fan/max',
-          settings: locations[location].settings,
-        });
-      }
     }
+
+    Object.assign(status.locations[location], {
+      setAutoLink: `${location}/fan/auto`,
+      setOffLink: `${location}/fan/off`,
+      setMinLink: `${location}/fan/min`,
+      setMaxLink: `${location}/fan/max`,
+      settings: locations[location].settings,
+    });
   }
 
   return status;
