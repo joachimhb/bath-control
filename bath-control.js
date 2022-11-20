@@ -12,6 +12,8 @@ const bodyParser = require('body-parser');
 
 const rpio  = require('rpio');
 
+const Control = require('./lib/Control');
+
 rpio.init({mapping: 'gpio'});
 
 const logger = log4js.getLogger();
@@ -36,8 +38,6 @@ try {
     logger.error(`Failed to cleanup lockfile [${lockFilePath}]`, error);
   }
 }
-
-const Control = require('./lib/Control');
 
 let config = null;
 
